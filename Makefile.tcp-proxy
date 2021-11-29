@@ -1,0 +1,32 @@
+CC=g++
+CXXFLAGS=-O3 -std=c++11 -Wall -pedantic -D_GNU_SOURCE -D_WIN32_WINNT=0x0A00 -I.
+
+LDFLAGS=-lmswsock -lws2_32
+
+MAKEDEPEND=${CC} -MM
+PROGRAM=tcp-proxy.exe
+
+OBJS = tcp-proxy.o net\tcp\proxy.o util\timer.o net\async\thread_pool.o \
+	net\async\stream\socket.o net\socket\address.o
+
+DEPS:= ${OBJS:%.o=%.d}
+
+all: $(PROGRAM)
+
+${PROGRAM}: ${OBJS}
+	${CC} ${OBJS} ${LIBS} -o $@ ${LDFLAGS}
+
+clean:
+	del ${PROGRAM} ${OBJS} ${DEPS}
+
+${OBJS} ${DEPS} ${PROGRAM} : Makefile.tcp-proxy
+
+.PHONY : all clean
+
+%.d : %.cpp
+	${MAKEDEPEND} ${CXXFLAGS} $< -MT ${@:%.d=%.o} > $@
+
+%.o : %.cpp
+	${CC} ${CXXFLAGS} -c -o $@ $<
+
+-include ${DEPS}
